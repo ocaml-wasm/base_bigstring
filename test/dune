@@ -1,3 +1,4 @@
 (library (name base_bigstring_test)
  (libraries base_bigstring expect_test_helpers_core)
+ (inline_tests (flags -drop-tag no-js -drop-tag 64-bits-only -drop-tag no-wasm) (modes js))
  (preprocess (pps ppx_jane)))

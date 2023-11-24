@@ -259,7 +259,7 @@ let%test_module "truncating getters (should end in [_trunc] or begin with [unsaf
           0x45c6c7c8 (= -976828472) |}]
     ;;
 
-    let%expect_test ("32-bit int" [@tags "js-only"]) =
+    let%expect_test ("32-bit int" [@tags "js-only", "no-wasm"]) =
       test get_int64_le_trunc;
       [%expect
         {|
