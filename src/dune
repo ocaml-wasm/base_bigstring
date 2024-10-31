@@ -1,5 +1,6 @@
 (library (name base_bigstring) (public_name base_bigstring)
- (js_of_ocaml (javascript_files runtime.js) (wasm_files runtime.wat))
+ (js_of_ocaml (javascript_files runtime.js))
+ (wasm_of_ocaml (javascript_files runtime.js) (wasm_files runtime.wat))
  (libraries base int_repr)
  (foreign_stubs (language c) (names base_bigstring_stubs))
  (ocamlopt_flags :standard -O3)
