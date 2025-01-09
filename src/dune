@@ -6,6 +6,9 @@
  (public_name base_bigstring)
  (js_of_ocaml
   (javascript_files runtime.js))
+ (wasm_of_ocaml
+  (wasm_files runtime.wat)
+  (javascript_files runtime.js))
  (libraries base int_repr sexplib)
  (ocamlopt_flags :standard -O3)
  (preprocess
