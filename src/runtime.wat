@@ -1,4 +1,6 @@
 (module
+   (@string_imports "str")
+   (@string_type $string)
    (import "env" "caml_ba_create"
       (func $caml_ba_create
          (param (ref eq)) (param (ref eq)) (param (ref eq)) (result (ref eq))))
@@ -29,9 +31,11 @@
          (param (ref eq)) (param (ref eq)) (param (ref eq)) (param (ref eq))
          (param (ref eq)) (result (ref eq))))
    (import "env" "caml_bigstring_memcmp_string"
-      (func $bigstring_memcmp_bytes_stub
+      (func $caml_bigstring_memcmp_string
          (param (ref eq)) (param (ref eq)) (param (ref eq)) (param (ref eq))
          (param (ref eq)) (result (ref eq))))
+   (import "env" "string_of_bytes"
+      (func $string_of_bytes (param (ref $bytes)) (result (ref $string))))
    (import "env" "caml_bigstring_strncmp"
       (func $bigstring_strncmp
          (param (ref eq)) (param (ref eq)) (param (ref eq)) (param (ref eq))
@@ -52,7 +56,12 @@
       (func $caml_copy_int32 (param $i i32) (result (ref eq))))
 
    (type $block (array (mut (ref eq))))
-   (type $string (array (mut i8)))
+(@if $use_js_string
+(@then
+   (type $string (struct (field externref))))
+(@else
+   (type $string (array (mut i8)))))
+   (type $bytes (array (mut i8)))
 
    (func (export "bigstring_alloc_v2")
       (param $size (ref eq)) (result (ref eq))
@@ -79,7 +88,30 @@
 
    (export "bigstring_memcmp_stub" (func $bigstring_memcmp_stub))
 
-   (export "bigstring_memcmp_bytes_stub" (func $bigstring_memcmp_bytes_stub))
+(@if $use_js_string
+(@then
+   ;; The runtime only compares bigstrings with strings: compare with a
+   ;; string holding the relevant part of the byte array
+   (func (export "bigstring_memcmp_bytes_stub")
+      (param $ba (ref eq)) (param $pos1 (ref eq))
+      (param $vb (ref eq)) (param $vpos2 (ref eq)) (param $vlen (ref eq))
+      (result (ref eq))
+      (local $len i32) (local $sub (ref $bytes))
+      (local.set $len (i31.get_s (ref.cast (ref i31) (local.get $vlen))))
+      (local.set $sub (array.new $bytes (i32.const 0) (local.get $len)))
+      (array.copy $bytes $bytes
+         (local.get $sub) (i32.const 0)
+         (ref.cast (ref $bytes) (local.get $vb))
+         (i31.get_s (ref.cast (ref i31) (local.get $vpos2)))
+         (local.get $len))
+      (return_call $caml_bigstring_memcmp_string
+         (local.get $ba) (local.get $pos1)
+         (call $string_of_bytes (local.get $sub)) (ref.i31 (i32.const 0))
+         (local.get $vlen))))
+(@else
+   ;; Strings are byte arrays
+   (export "bigstring_memcmp_bytes_stub"
+      (func $caml_bigstring_memcmp_string))))
 
    (export "bigstring_strncmp" (func $bigstring_strncmp))
 
